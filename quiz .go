@@ -5,6 +5,8 @@ import ("flag"
 "encoding/csv"
 "io"
 "fmt"
+"strconv"
+
 )
 func processCSV(rc io.Reader) (ch chan []string) {
 	ch = make(chan []string, 10)
@@ -25,23 +27,25 @@ func processCSV(rc io.Reader) (ch chan []string) {
 	}()
 	return
 }
+
 func main(){
-	quizfile:=flag.String("quizFile","problems.csv","csv quiz filename ")
+	var total=0
+	var right=0
+	quizfile:=flag.String("quizFile","prob.csv","csv quiz filename ")
 	flag.Parse()
-	file, err := os.Open(*quizfile) // For read access.
+	file, err := os.Open(*quizfile) // For read access.TODO: remove this opening
      if err != nil {
 	log.Fatal(err)
-    }
-	r := csv.NewReader(file)
-	for {
-		record, err := r.Read()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		fmt.Println(record)
 	}
+	var ans int
+	for rec := range processCSV(file) {
+		total++
+		fmt.Println(rec[0])
+		fmt.Scan(&ans)
+		anss:=strconv.Itoa(ans)
+		if anss==rec[1]{
+right++
+		}
+		}
+		fmt.Printf("Mark: %d/%d\n",right,total)
 }
