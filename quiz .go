@@ -6,7 +6,25 @@ import ("flag"
 "io"
 "fmt"
 )
-
+func processCSV(rc io.Reader) (ch chan []string) {
+	ch = make(chan []string, 10)
+	go func() {
+		r := csv.NewReader(rc)
+		defer close(ch)
+		for {
+			rec, err := r.Read()
+			if err != nil {
+				if err == io.EOF {
+					break
+				}
+				log.Fatal(err)
+				
+			}
+			ch <- rec
+		}
+	}()
+	return
+}
 func main(){
 	quizfile:=flag.String("quizFile","problems.csv","csv quiz filename ")
 	flag.Parse()
