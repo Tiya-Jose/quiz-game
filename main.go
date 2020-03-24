@@ -15,13 +15,13 @@ var (
 	rightAns       = 0
 	totalQuestions = 0
 	ch             = make(chan []string)
+	done           = make(chan bool)
 )
 
-func startTimer(start string, myTime *int) *time.Timer {
-	if start == "y" {
-		return time.NewTimer(time.Duration(*myTime) * time.Second)
-	}
-	return time.NewTimer(0)
+func startTimer(myTime *int) *time.Timer {
+
+	return time.NewTimer(time.Duration(*myTime) * time.Second)
+
 }
 
 func processCSV(rc io.Reader) [][]string {
@@ -40,6 +40,7 @@ func getRecords(file *os.File) {
 	for _, records := range rec {
 		ch <- records
 	}
+	done <- true
 }
 
 func checkTime(timer *time.Timer) {
@@ -47,8 +48,8 @@ func checkTime(timer *time.Timer) {
 	case <-timer.C:
 		fmt.Println("\nYour timer expired!!!")
 		fmt.Printf("Score: %d/%d\n", rightAns, totalQuestions)
-		close(ch)
 		os.Exit(1)
+
 	}
 }
 
@@ -70,21 +71,26 @@ func main() {
 	fmt.Println(intro)
 	var start string
 	fmt.Scan(&start)
-	timer := startTimer(start, myTime)
+	if start == "y" {
+		timer := startTimer(myTime)
 
-	go getRecords(file)
-	for {
-		select {
-		case rec := <-ch:
-			go checkTime(timer)
-			var ans string
-			problemCount++
-			fmt.Printf("Problem #%d: %s\n", problemCount, rec[0])
-			fmt.Scan(&ans)
-			if ans == strings.TrimSpace(rec[1]) {
-				rightAns++
+		go getRecords(file)
+		for {
+			select {
+			case rec := <-ch:
+				go checkTime(timer)
+				var ans string
+				problemCount++
+				fmt.Printf("Problem #%d: %s\n", problemCount, rec[0])
+				fmt.Scan(&ans)
+				if ans == strings.TrimSpace(rec[1]) {
+					rightAns++
+				}
+			case <-done:
+				fmt.Println("\nYou completed before the timer expired!!!")
+				fmt.Printf("Score: %d/%d\n", rightAns, totalQuestions)
+				os.Exit(1)
 			}
-
 		}
 	}
 
