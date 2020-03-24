@@ -49,7 +49,6 @@ func checkTime(timer *time.Timer) {
 		fmt.Println("\nYour timer expired!!!")
 		fmt.Printf("Score: %d/%d\n", rightAns, totalQuestions)
 		os.Exit(1)
-
 	}
 }
 
@@ -89,7 +88,7 @@ func main() {
 			case <-done:
 				fmt.Println("\nYou completed before the timer expired!!!")
 				fmt.Printf("Score: %d/%d\n", rightAns, totalQuestions)
-				os.Exit(1)
+				return
 			}
 		}
 	}
