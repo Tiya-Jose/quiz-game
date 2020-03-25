@@ -19,9 +19,7 @@ var (
 )
 
 func startTimer(myTime *int) *time.Timer {
-
 	return time.NewTimer(time.Duration(*myTime) * time.Second)
-
 }
 
 func processCSV(rc io.Reader) [][]string {
@@ -36,20 +34,19 @@ func processCSV(rc io.Reader) [][]string {
 }
 
 func getRecords(file *os.File) {
+	defer close(ch)
 	rec := processCSV(file)
-	for _, records := range rec {
-		ch <- records
+	for _, record := range rec {
+		ch <- record
 	}
 	done <- true
 }
 
 func checkTime(timer *time.Timer) {
-	select {
-	case <-timer.C:
-		fmt.Println("\nYour timer expired!!!")
-		fmt.Printf("Score: %d/%d\n", rightAns, totalQuestions)
-		os.Exit(1)
-	}
+	<-timer.C
+	fmt.Println("\nYour timer expired!!!")
+	fmt.Printf("Score: %d/%d\n", rightAns, totalQuestions)
+	os.Exit(1)
 }
 
 func main() {
@@ -57,8 +54,6 @@ func main() {
 	quizfile := flag.String("quizFile", "problems.csv", "csv quizFile file in the format of 'question,answer' ")
 	myTime := flag.Int("timer", 30, "time to complete the quiz")
 	flag.Parse()
-
-	defer close(ch)
 
 	file, err := os.Open(*quizfile)
 	if err != nil {
